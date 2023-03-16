@@ -1,0 +1,50 @@
+import codecademylib3
+import pandas as pd
+
+
+ad_clicks = pd.read_csv('ad_clicks.csv')
+print(ad_clicks.head())
+#which ad platform is getting the most views
+ad_platform = ad_clicks.groupby("utm_source").user_id.count().reset_index()
+print(ad_platform)
+#Add a column named is_click to show if an ad was clicked(if the ad_click_timestamp is not null means that someone clicked on the ad and will have the value True)
+ad_clicks ["is_click"] = ~ad_clicks.ad_click_timestamp.isnull()
+print (ad_clicks.head())
+#percentage of people clicked on ad from each ad platform
+clicks_by_source = ad_clicks.groupby(["utm_source","is_click"]).user_id.count().reset_index()
+clicks_pivot = clicks_by_source.pivot(columns = "is_click", index = "utm_source", values ="user_id").reset_index()
+print(clicks_pivot)
+clicks_pivot["percent_clicked"] = clicks_pivot[True] / (clicks_pivot[True]+clicks_pivot[False])
+print(clicks_pivot)
+
+#Which ad is better? Ad A or Ad b?
+#was ad A shown as many times as ad B? (it should if we want to have a good comparison between  the 2 ads)
+num_add = ad_clicks.groupby("experimental_group").user_id.count().reset_index()
+print(num_add)
+# yes both as were seen 827 times each.
+
+# how many users cliched on ad A compared to ad B
+percentage_add_clicked = ad_clicks.groupby(["experimental_group","is_click"]).user_id.count().reset_index()
+
+pivot_percentage_add_clicked =percentage_add_clicked.pivot(columns = "is_click", index = "experimental_group", values = "user_id").reset_index()
+
+print(pivot_percentage_add_clicked)
+
+#Ad A was clicked 310 times compare to 255 times that ad B was clicked. Ad A is a better add to attract people to learn more about the product.
+
+ #does the day of the week affect the number of clicks?
+a_clicks = ad_clicks[ad_clicks.experimental_group =="A"]
+b_clicks = ad_clicks[ad_clicks.experimental_group =="B"]
+
+group_a =a_clicks.groupby(["day", "is_click"]).user_id.count().reset_index()
+print(group_a)
+
+group_b = b_clicks.groupby(["is_click", "day"]).user_id.count().reset_index()
+group_a_pivot = group_a.pivot(columns = "is_click", index = "day", values = "user_id")
+group_a_pivot["percent_clicked_ad_A"] = group_a_pivot[True] / (group_a_pivot[True]+group_a_pivot[False])
+print(group_a_pivot)
+group_b_pivot = group_b.pivot(columns = "is_click", index = "day", values = "user_id")
+group_b_pivot["percent_clicked_ad_B"] = group_b_pivot[True] / (group_b_pivot[True]+group_b_pivot[False])
+print(group_b_pivot)
+
+# In general ad A was clicked more often than ad b. Only on Tuesday did ad B take the lead by being cliqued 37.82% compared to ad A 36.13% Overall Ad A is recommended to get people to click on the advertisement and learn more about the product. Now, we do not know if the people clicked baught the product. If the goal of the advertisement was to create awareness I would recommend Advertisement A. If the goal is to sell the product more analytics must be completed to see the percentage of the people that clicked actually baught the product. Maybe the ad was not targeted to the right audience.
